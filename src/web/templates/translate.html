@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block title %}الترجمة - {{ app_name }}{% endblock %}
+{% block page_title %}الترجمة الذكية{% endblock %}
+
+{% block content %}
+<div class="translate-container">
+    <div class="translate-header">
+        <h2><i class="fas fa-language"></i> ترجمة النصوص</h2>
+        <p>ترجمة احترافية بين أي لغتين باستخدام الذكاء الاصطناعي</p>
+    </div>
+
+    <div class="translate-controls">
+        <div class="lang-select">
+            <label>من:</label>
+            <select id="sourceLang">
+                <option value="">تلقائي (كشف اللغة)</option>
+                <option value="العربية">العربية</option>
+                <option value="الإنجليزية">الإنجليزية</option>
+                <option value="الفرنسية">الفرنسية</option>
+                <option value="الألمانية">الألمانية</option>
+                <option value="الإسبانية">الإسبانية</option>
+                <option value="الإيطالية">الإيطالية</option>
+                <option value="البرتغالية">البرتغالية</option>
+                <option value="الروسية">الروسية</option>
+                <option value="الصينية">الصينية</option>
+                <option value="اليابانية">اليابانية</option>
+                <option value="الكورية">الكورية</option>
+                <option value="التركية">التركية</option>
+                <option value="الهندية">الهندية</option>
+            </select>
+        </div>
+        <button class="swap-btn" onclick="swapLanguages()">
+            <i class="fas fa-exchange-alt"></i>
+        </button>
+        <div class="lang-select">
+            <label>إلى:</label>
+            <select id="targetLang">
+                <option value="الإنجليزية">الإنجليزية</option>
+                <option value="العربية">العربية</option>
+                <option value="الفرنسية">الفرنسية</option>
+                <option value="الألمانية">الألمانية</option>
+                <option value="الإسبانية">الإسبانية</option>
+                <option value="الإيطالية">الإيطالية</option>
+                <option value="البرتغالية">البرتغالية</option>
+                <option value="الروسية">الروسية</option>
+                <option value="الصينية">الصينية</option>
+                <option value="اليابانية">اليابانية</option>
+                <option value="الكورية">الكورية</option>
+                <option value="التركية">التركية</option>
+                <option value="الهندية">الهندية</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="translate-panels">
+        <div class="translate-panel">
+            <div class="panel-header">
+                <span>النص الأصلي</span>
+                <button class="icon-btn" onclick="clearSource()" title="مسح">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <textarea id="sourceText" placeholder="اكتب أو الصق النص هنا..." rows="10"></textarea>
+            <div class="panel-footer">
+                <span id="charCount">0 حرف</span>
+                <div class="panel-actions">
+                    <button class="btn btn-sm" onclick="proofread()">
+                        <i class="fas fa-spell-check"></i> تدقيق لغوي
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="translate-panel">
+            <div class="panel-header">
+                <span>الترجمة</span>
+                <button class="icon-btn" onclick="copyTranslation()" title="نسخ">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+            <div id="translationResult" class="translation-output">
+                <p class="placeholder-text">الترجمة هتظهر هنا...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="translate-actions">
+        <button class="btn btn-primary btn-lg" onclick="translateText()" id="translateBtn">
+            <i class="fas fa-language"></i> ترجم
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const sourceText = document.getElementById('sourceText');
+    const charCount = document.getElementById('charCount');
+    const translateBtn = document.getElementById('translateBtn');
+    const translationResult = document.getElementById('translationResult');
+
+    sourceText.addEventListener('input', () => {
+        charCount.textContent = `${sourceText.value.length} حرف`;
+    });
+
+    async function translateText() {
+        const text = sourceText.value.trim();
+        if (!text) return;
+
+        const targetLang = document.getElementById('targetLang').value;
+        const sourceLang = document.getElementById('sourceLang').value;
+
+        translateBtn.disabled = true;
+        translateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الترجمة...';
+        translationResult.innerHTML = '<p class="loading">جاري الترجمة...</p>';
+
+        try {
+            const res = await fetch('/api/translate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    text,
+                    target_language: targetLang,
+                    source_language: sourceLang || null,
+                }),
+            });
+            const data = await res.json();
+
+            if (data.status === 'ok') {
+                translationResult.innerHTML = `<p>${data.result.translated}</p>`;
+            } else {
+                translationResult.innerHTML = `<p class="error">${data.error}</p>`;
+            }
+        } catch (e) {
+            translationResult.innerHTML = `<p class="error">حصل خطأ في الاتصال</p>`;
+        }
+
+        translateBtn.disabled = false;
+        translateBtn.innerHTML = '<i class="fas fa-language"></i> ترجم';
+    }
+
+    async function proofread() {
+        const text = sourceText.value.trim();
+        if (!text) return;
+
+        translationResult.innerHTML = '<p class="loading">جاري التدقيق اللغوي...</p>';
+
+        try {
+            const res = await fetch('/api/proofread', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text }),
+            });
+            const data = await res.json();
+
+            if (data.status === 'ok') {
+                translationResult.innerHTML = `<div class="proofread-result"><h4>النص المصحح:</h4><p>${data.result.corrected}</p></div>`;
+            } else {
+                translationResult.innerHTML = `<p class="error">${data.error}</p>`;
+            }
+        } catch (e) {
+            translationResult.innerHTML = `<p class="error">حصل خطأ في الاتصال</p>`;
+        }
+    }
+
+    function swapLanguages() {
+        const source = document.getElementById('sourceLang');
+        const target = document.getElementById('targetLang');
+        const tempVal = source.value;
+        if (tempVal) {
+            source.value = target.value;
+            target.value = tempVal;
+        }
+    }
+
+    function clearSource() {
+        sourceText.value = '';
+        charCount.textContent = '0 حرف';
+    }
+
+    function copyTranslation() {
+        const text = translationResult.innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            showNotification('تم النسخ!');
+        });
+    }
+
+    function showNotification(msg) {
+        const notif = document.createElement('div');
+        notif.className = 'notification';
+        notif.textContent = msg;
+        document.body.appendChild(notif);
+        setTimeout(() => notif.remove(), 2000);
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}الذاكرة - {{ app_name }}{% endblock %}
+{% block page_title %}الذاكرة والتعلم{% endblock %}
+
+{% block content %}
+<div class="memories-container">
+    <div class="memories-header">
+        <h2><i class="fas fa-brain"></i> ذاكرة المدير التنفيذي</h2>
+        <p>كل حاجة اتعلمها عنك وعن تفضيلاتك</p>
+    </div>
+
+    {% if memories %}
+    <div class="memories-grid">
+        {% for memory in memories %}
+        <div class="memory-card category-{{ memory.category }}">
+            <div class="memory-header">
+                <span class="memory-category">
+                    {% if memory.category == 'preference' %}
+                    <i class="fas fa-heart"></i> تفضيل
+                    {% elif memory.category == 'learning' %}
+                    <i class="fas fa-graduation-cap"></i> تعلّم
+                    {% elif memory.category == 'mistake' %}
+                    <i class="fas fa-exclamation-triangle"></i> خطأ
+                    {% elif memory.category == 'skill' %}
+                    <i class="fas fa-star"></i> مهارة
+                    {% else %}
+                    <i class="fas fa-bookmark"></i> {{ memory.category }}
+                    {% endif %}
+                </span>
+                <span class="memory-importance">
+                    {% for i in range(memory.importance) %}
+                    <i class="fas fa-star"></i>
+                    {% endfor %}
+                </span>
+            </div>
+            <h3>{{ memory.key }}</h3>
+            <p>{{ memory.value }}</p>
+            <div class="memory-footer">
+                <span><i class="fas fa-calendar"></i> {{ memory.created_at.strftime('%Y-%m-%d') if memory.created_at else '' }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-brain"></i>
+        <h3>الذاكرة فاضية لسه</h3>
+        <p>كل ما تتكلم مع المدير التنفيذي أكتر، هيتعلم حاجات عنك ويحفظها هنا</p>
+        <a href="/chat" class="btn btn-primary">ابدأ محادثة</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

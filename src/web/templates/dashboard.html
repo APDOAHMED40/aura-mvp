@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}لوحة التحكم - {{ app_name }}{% endblock %}
+{% block page_title %}لوحة التحكم{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="welcome-card">
+        <div class="welcome-text">
+            <h2>أهلاً بيك! أنا المدير التنفيذي الذكي</h2>
+            <p>جاهز أساعدك في كل حاجة. اختار من القائمة الجانبية أو كلمني في المحادثة.</p>
+            <a href="/chat" class="btn btn-primary">
+                <i class="fas fa-comments"></i> ابدأ محادثة
+            </a>
+        </div>
+        <div class="welcome-icon">
+            <i class="fas fa-robot"></i>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon blue">
+                <i class="fas fa-comments"></i>
+            </div>
+            <div class="stat-info">
+                <h3>{{ summary.get('total_messages', 0) }}</h3>
+                <p>رسائل النهاردة</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-info">
+                <h3>{{ summary.get('tasks_completed', 0) }}</h3>
+                <p>مهام مكتملة</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon orange">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-info">
+                <h3>{{ summary.get('tasks_pending', 0) }}</h3>
+                <p>مهام قيد التنفيذ</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon purple">
+                <i class="fas fa-brain"></i>
+            </div>
+            <div class="stat-info">
+                <h3>0</h3>
+                <p>ذكريات محفوظة</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="modules-grid">
+        <h2 class="section-title">الوحدات المتاحة</h2>
+        <div class="modules-cards">
+            <a href="/chat" class="module-card active">
+                <div class="module-icon">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <h3>المحادثة الذكية</h3>
+                <p>تكلم مع المدير التنفيذي وادّيله أي أمر</p>
+                <span class="module-badge active">متاح</span>
+            </a>
+            <a href="/translate" class="module-card active">
+                <div class="module-icon">
+                    <i class="fas fa-language"></i>
+                </div>
+                <h3>الترجمة</h3>
+                <p>ترجمة نصوص بين أي لغتين بدقة عالية</p>
+                <span class="module-badge active">متاح</span>
+            </a>
+            <div class="module-card disabled">
+                <div class="module-icon">
+                    <i class="fas fa-palette"></i>
+                </div>
+                <h3>التصميم</h3>
+                <p>لوجو، بوستر، بوستات سوشيال ميديا</p>
+                <span class="module-badge coming">قريباً</span>
+            </div>
+            <div class="module-card disabled">
+                <div class="module-icon">
+                    <i class="fas fa-video"></i>
+                </div>
+                <h3>الفيديو</h3>
+                <p>فيديوهات سوشيال ميديا ويوتيوب</p>
+                <span class="module-badge coming">قريباً</span>
+            </div>
+            <div class="module-card disabled">
+                <div class="module-icon">
+                    <i class="fas fa-share-alt"></i>
+                </div>
+                <h3>السوشيال ميديا</h3>
+                <p>إدارة حسابات ونشر محتوى تلقائي</p>
+                <span class="module-badge coming">قريباً</span>
+            </div>
+            <div class="module-card disabled">
+                <div class="module-icon">
+                    <i class="fas fa-ad"></i>
+                </div>
+                <h3>الإعلانات الممولة</h3>
+                <p>إدارة حملات Meta Ads بالذكاء الاصطناعي</p>
+                <span class="module-badge coming">قريباً</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

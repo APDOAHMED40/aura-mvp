@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block title %}المحادثة - {{ app_name }}{% endblock %}
+{% block page_title %}المحادثة الذكية{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+    <div class="chat-messages" id="chatMessages">
+        <div class="message assistant">
+            <div class="message-avatar">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="message-content">
+                <p>أهلاً بيك! أنا المدير التنفيذي الذكي. جاهز أساعدك في أي حاجة.</p>
+                <p>ممكن تطلب مني:</p>
+                <ul>
+                    <li>ترجمة نصوص</li>
+                    <li>كتابة محتوى ومقالات</li>
+                    <li>أبحاث ومعلومات</li>
+                    <li>تخطيط وتنظيم مهام</li>
+                    <li>أي حاجة تانية!</li>
+                </ul>
+                <p>قولي إيه اللي محتاجه؟</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="chat-input-container">
+        <form id="chatForm" onsubmit="sendMessage(event)">
+            <div class="input-wrapper">
+                <textarea
+                    id="messageInput"
+                    placeholder="اكتب رسالتك هنا..."
+                    rows="1"
+                    onkeydown="handleKeyDown(event)"
+                ></textarea>
+                <button type="submit" id="sendBtn" class="send-btn">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const chatMessages = document.getElementById('chatMessages');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    let ws = null;
+    let currentAssistantMsg = null;
+
+    function connectWebSocket() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        ws = new WebSocket(`${protocol}//${window.location.host}/ws/chat`);
+
+        ws.onopen = () => console.log('WebSocket connected');
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+
+            if (data.type === 'start') {
+                currentAssistantMsg = addMessage('', 'assistant');
+                sendBtn.disabled = true;
+                sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            } else if (data.type === 'chunk') {
+                if (currentAssistantMsg) {
+                    const contentDiv = currentAssistantMsg.querySelector('.message-text');
+                    contentDiv.innerHTML += data.content;
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            } else if (data.type === 'end') {
+                if (currentAssistantMsg) {
+                    const contentDiv = currentAssistantMsg.querySelector('.message-text');
+                    contentDiv.innerHTML = formatMarkdown(data.content);
+                }
+                currentAssistantMsg = null;
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+            } else if (data.type === 'error') {
+                addMessage(data.content, 'error');
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+            }
+        };
+
+        ws.onclose = () => {
+            console.log('WebSocket disconnected. Reconnecting...');
+            setTimeout(connectWebSocket, 3000);
+        };
+
+        ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+        };
+    }
+
+    function addMessage(content, role) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${role}`;
+
+        const avatar = document.createElement('div');
+        avatar.className = 'message-avatar';
+        avatar.innerHTML = role === 'user'
+            ? '<i class="fas fa-user"></i>'
+            : role === 'error'
+            ? '<i class="fas fa-exclamation-triangle"></i>'
+            : '<i class="fas fa-robot"></i>';
+
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'message-content';
+
+        const textDiv = document.createElement('div');
+        textDiv.className = 'message-text';
+        textDiv.innerHTML = role === 'user' ? escapeHtml(content) : (content || '<span class="typing-indicator">يكتب...</span>');
+
+        contentDiv.appendChild(textDiv);
+        msgDiv.appendChild(avatar);
+        msgDiv.appendChild(contentDiv);
+
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        return msgDiv;
+    }
+
+    function sendMessage(event) {
+        event.preventDefault();
+        const message = messageInput.value.trim();
+        if (!message || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+        addMessage(message, 'user');
+        ws.send(JSON.stringify({ message }));
+        messageInput.value = '';
+        messageInput.style.height = 'auto';
+    }
+
+    function handleKeyDown(event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage(event);
+        }
+    }
+
+    messageInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+    });
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function formatMarkdown(text) {
+        // Remove JSON block at end
+        text = text.replace(/```json[\s\S]*?```/g, '');
+
+        // Code blocks
+        text = text.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>');
+        // Inline code
+        text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+        // Bold
+        text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        // Italic
+        text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+        // Headers
+        text = text.replace(/^### (.+)$/gm, '<h4>$1</h4>');
+        text = text.replace(/^## (.+)$/gm, '<h3>$1</h3>');
+        text = text.replace(/^# (.+)$/gm, '<h2>$1</h2>');
+        // Lists
+        text = text.replace(/^- (.+)$/gm, '<li>$1</li>');
+        text = text.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+        // Line breaks
+        text = text.replace(/\n\n/g, '</p><p>');
+        text = text.replace(/\n/g, '<br>');
+
+        return `<p>${text}</p>`;
+    }
+
+    // Load history
+    async function loadHistory() {
+        try {
+            const res = await fetch('/api/history?limit=30');
+            const data = await res.json();
+            if (data.status === 'ok' && data.history.length > 0) {
+                data.history.forEach(msg => {
+                    if (msg.role === 'user') {
+                        addMessage(msg.content, 'user');
+                    } else if (msg.role === 'assistant') {
+                        const el = addMessage('', 'assistant');
+                        el.querySelector('.message-text').innerHTML = formatMarkdown(msg.content);
+                    }
+                });
+            }
+        } catch (e) {
+            console.error('Failed to load history:', e);
+        }
+    }
+
+    loadHistory();
+    connectWebSocket();
+</script>
+{% endblock %}
