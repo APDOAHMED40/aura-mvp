@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ app_name }}{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fas fa-robot"></i>
+                <span>المدير التنفيذي</span>
+            </div>
+            <button class="sidebar-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <ul class="nav-links">
+            <li>
+                <a href="/" class="{% if request.url.path == '/' %}active{% endif %}">
+                    <i class="fas fa-home"></i>
+                    <span>لوحة التحكم</span>
+                </a>
+            </li>
+            <li>
+                <a href="/chat" class="{% if request.url.path == '/chat' %}active{% endif %}">
+                    <i class="fas fa-comments"></i>
+                    <span>المحادثة</span>
+                </a>
+            </li>
+            <li>
+                <a href="/translate" class="{% if request.url.path == '/translate' %}active{% endif %}">
+                    <i class="fas fa-language"></i>
+                    <span>الترجمة</span>
+                </a>
+            </li>
+            <li>
+                <a href="/tasks" class="{% if request.url.path == '/tasks' %}active{% endif %}">
+                    <i class="fas fa-tasks"></i>
+                    <span>المهام</span>
+                </a>
+            </li>
+            <li>
+                <a href="/memories" class="{% if request.url.path == '/memories' %}active{% endif %}">
+                    <i class="fas fa-brain"></i>
+                    <span>الذاكرة</span>
+                </a>
+            </li>
+        </ul>
+        <div class="sidebar-footer">
+            <div class="module-status">
+                <h4>الوحدات</h4>
+                <div class="status-item active">
+                    <i class="fas fa-circle"></i> المحادثة
+                </div>
+                <div class="status-item active">
+                    <i class="fas fa-circle"></i> الترجمة
+                </div>
+                <div class="status-item coming-soon">
+                    <i class="fas fa-circle"></i> التصميم (قريباً)
+                </div>
+                <div class="status-item coming-soon">
+                    <i class="fas fa-circle"></i> الفيديو (قريباً)
+                </div>
+                <div class="status-item coming-soon">
+                    <i class="fas fa-circle"></i> السوشيال (قريباً)
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content" id="main-content">
+        <header class="top-bar">
+            <button class="menu-btn" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>{% block page_title %}{{ app_name }}{% endblock %}</h1>
+            <div class="top-bar-actions">
+                <span class="status-badge online">
+                    <i class="fas fa-circle"></i> متصل
+                </span>
+            </div>
+        </header>
+
+        <div class="content">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <script src="/static/js/main.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
